@@ -13,7 +13,7 @@ const DEFAULT_USER_DATA = {
 const provider = new JsonRpcProvider(new Connection({ fullnode: RPC }));
 
 export function useUserRecord() {
-  const { currentAccount } = useWalletKit();
+  const { currentAccount, isConnected } = useWalletKit();
   const [userData, setUserData] = useState<UserData>(DEFAULT_USER_DATA);
   const [cooldown, setCooldown] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -55,6 +55,8 @@ export function useUserRecord() {
       setUserData(userData);
       setLoading(false);
       setReady(true);
+    } else {
+      setUserData(DEFAULT_USER_DATA);
     }
   };
 
@@ -67,6 +69,6 @@ export function useUserRecord() {
     loading,
     refresh: () => refreshUserData(currentAccount?.address),
     cooldown,
-    ready,
+    ready: (isConnected && ready) || !isConnected,
   };
 }
