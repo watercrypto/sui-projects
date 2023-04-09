@@ -20,7 +20,7 @@ export const Pixel: FC<Props> = ({ color, handleClick, selected, isReady }) => {
       className={`Pixel cursor-pointer relative rounded-md shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.15)] hover:shadow-[inset_0_2px_6px_0_rgba(0,0,0,0.35)] duration-200${
         !isReady ? " bg-slate-400 animate-pulse" : ""
       }`}
-      onClick={() => (isReady ? handleClick : {})}
+      onClick={handleClick}
     >
       <CgColorPicker
         size={16}

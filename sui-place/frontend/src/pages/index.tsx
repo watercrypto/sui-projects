@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Connection, JsonRpcProvider } from "@mysten/sui.js";
 import { useWalletKit } from "@mysten/wallet-kit";
 import Head from "next/head";
@@ -41,7 +41,7 @@ export default function Home() {
 
         // Attempt to send transaction to validators
         const sentToast = toast.loading("Confirming transaction...", {
-          duration: 10000,
+          duration: 100000,
         });
         setState(AppState.TX_SENT);
         const response = await provider.executeTransactionBlock({
@@ -53,7 +53,7 @@ export default function Home() {
         toast.dismiss(sentToast);
 
         if (response.effects?.status.status === "success") {
-          await new Promise((res) => setTimeout(res, 2000));
+          await new Promise((res) => setTimeout(res, 4000));
         }
 
         // Once response is received, let user know
@@ -72,10 +72,6 @@ export default function Home() {
   };
 
   const isReady = pixelsReady && userDataReady;
-
-  useEffect(() => {
-    console.log("isReady:", isReady);
-  }, [isReady]);
 
   return (
     <>

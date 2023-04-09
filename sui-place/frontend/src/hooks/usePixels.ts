@@ -35,6 +35,8 @@ export function usePixels() {
   };
 
   useEffect(() => {
+    refreshPlaceData();
+
     // Refresh Pixels data every 20 seconds
     const interval = setInterval(refreshPlaceData, 20000);
     return () => clearInterval(interval);

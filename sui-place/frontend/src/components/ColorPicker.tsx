@@ -27,13 +27,14 @@ const ColorPicker: FC<Props> = ({
   const setFromPixel = (p: PixelData) => setColor(p);
   useEffect(() => setFromPixel(selectedData), [selectedData]);
 
-  // Component colors and 
+  // Component colors and
   const { r, g, b } = color;
   const refreshIconColor = getOverlayIconColor(selectedData);
   const newTextColor = getOverlayIconColor(color);
 
   // App states
   const isReady = appState === AppState.READY;
+  const showSkeleton = appState === AppState.LOADING;
   const disableButton = !isReady || !isConnected || cooldown > 0;
 
   // CTA Button text
@@ -47,9 +48,9 @@ const ColorPicker: FC<Props> = ({
       <div className="w-full flex flex-row p-2 gap-2">
         <div
           className={`Refresh w-[30px] h-[30px] shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.15)] hover:shadow-[inset_0_2px_6px_0_rgba(0,0,0,0.35)] duration-200 cursor-pointer flex items-center justify-center rounded-tl-sm${
-            !isReady ? " bg-slate-400 animate-pulse" : ""
+            showSkeleton ? " bg-slate-400 animate-pulse" : ""
           }`}
-          style={isReady ? { background: `rgb(${r},${g},${b})` } : {}}
+          style={!showSkeleton ? { background: `rgb(${r},${g},${b})` } : {}}
           onClick={() => setColor(selectedData)}
         >
           <IoMdRefresh
@@ -60,10 +61,10 @@ const ColorPicker: FC<Props> = ({
         </div>
         <div
           className={`flex-1 h-[30px] shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.15)] relative text-[10px] rounded-tr-sm${
-            !isReady ? " bg-slate-400 animate-pulse" : ""
+            showSkeleton ? " bg-slate-400 animate-pulse" : ""
           }`}
           style={
-            isReady
+            !showSkeleton
               ? { background: `rgb(${color.r},${color.g},${color.b})` }
               : {}
           }

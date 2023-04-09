@@ -1,4 +1,4 @@
-import { SUI_CLOCK_OBJECT_ID, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SUI_CLOCK_OBJECT_ID, TransactionBlock } from "@mysten/sui.js";
 import { PACKAGE_ID, PLACE_ID } from "@/constants";
 import { PixelData } from "@/types";
 
