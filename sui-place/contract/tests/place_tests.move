@@ -3,7 +3,7 @@ module place::place_tests {
     use place::place::{Self, Place, PlaceAdminCapability};
 
     use std::debug;
-    use sui::clock::{Self, Clock};
+    use sui::clock;
     use sui::test_scenario::{Self as ts, Scenario};
 
     const ADMIN: address = @0xABCD;
@@ -11,15 +11,12 @@ module place::place_tests {
     /// Given an instance of a scenario, this codeblock initializes 
     /// and populates a Place instance to prevent too much boilerplate
     fun init_place(place_size: u64, scenario: &mut Scenario) {
-        // Instantiates a place and a clock
         place::create_place(ts::ctx(scenario));
-        clock::create_for_testing(ts::ctx(scenario));
-
-        // Initialize pixels inside place
         ts::next_tx(scenario, ADMIN);
         {
             let place_instance = ts::take_shared<Place>(scenario);
             let admin_capability = ts::take_from_sender<PlaceAdminCapability>(scenario);
+            // Initialize pixels inside place
             place::add_pixels(&mut place_instance, place_size, &admin_capability);
             ts::return_shared(place_instance);
             ts::return_to_sender(scenario, admin_capability);
@@ -30,12 +27,12 @@ module place::place_tests {
     fun basic_test() {
         let scenario_val = ts::begin(ADMIN);
         let scenario = &mut scenario_val;
+        let clock_instance = clock::create_for_testing(ts::ctx(scenario));
         init_place(2, scenario);
 
         ts::next_tx(scenario, ADMIN);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
             // set 1st pixel to black
             place::set_color(&mut place_instance, &clock_instance, 0, 0, 0, 0, ts::ctx(scenario));
             clock::increment_for_testing(&mut clock_instance, 60001); // 1ms after cooldown
@@ -43,9 +40,9 @@ module place::place_tests {
 
             debug::print<vector<vector<u8>>>(&place::get_colors(&place_instance));
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
+        clock::destroy_for_testing(clock_instance);
         ts::end(scenario_val);
     }
 
@@ -56,62 +53,55 @@ module place::place_tests {
         let user3 = @0xCBAF;
         let scenario_val = ts::begin(ADMIN);
         let scenario = &mut scenario_val;
+        let clock_instance = clock::create_for_testing(ts::ctx(scenario));
         init_place(4, scenario);
 
         // User1 sets Pixel #1 to black
         ts::next_tx(scenario, user1);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
 
             place::set_color(&mut place_instance, &clock_instance, 0, 0, 0, 0, ts::ctx(scenario));
             clock::increment_for_testing(&mut clock_instance, 10);
 
             debug::print<vector<vector<u8>>>(&place::get_colors(&place_instance));
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
         // User2 sets Pixel #2 to red
         ts::next_tx(scenario, user2);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
 
             place::set_color(&mut place_instance, &clock_instance, 1, 255, 0, 0, ts::ctx(scenario));
             clock::increment_for_testing(&mut clock_instance, 10);
 
             debug::print<vector<vector<u8>>>(&place::get_colors(&place_instance));
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
         // User3 sets Pixel #1 to blue, overwriting User1's color
         ts::next_tx(scenario, user3);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
 
             place::set_color(&mut place_instance, &clock_instance, 0, 0, 0, 255, ts::ctx(scenario));
             clock::increment_for_testing(&mut clock_instance, 10);
 
             debug::print<vector<vector<u8>>>(&place::get_colors(&place_instance));
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
         // User2 sets Pixel #1 to green, overwriting User3's color
         ts::next_tx(scenario, user2);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
 
             clock::increment_for_testing(&mut clock_instance, 350000); // set cooldown to valid
             place::set_color(&mut place_instance, &clock_instance, 0, 0, 255, 0, ts::ctx(scenario));
 
             debug::print<vector<vector<u8>>>(&place::get_colors(&place_instance));
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
         // Creates a new user and checks if get_user_record returns default values
@@ -128,6 +118,7 @@ module place::place_tests {
            ts::return_shared(place_instance);
         };
 
+        clock::destroy_for_testing(clock_instance);
         ts::end(scenario_val);
     }
 
@@ -136,13 +127,13 @@ module place::place_tests {
     fun err_cooldown_test() {
         let scenario_val = ts::begin(ADMIN);
         let scenario = &mut scenario_val;
+        let clock_instance = clock::create_for_testing(ts::ctx(scenario));
         init_place(2, scenario);
 
         // Modify a pixel's color
         ts::next_tx(scenario, ADMIN);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
             // Set 1st pixel to black
             place::set_color(&mut place_instance, &clock_instance, 0, 0, 0, 0, ts::ctx(scenario));
             // Set to 1ms before cooldown
@@ -151,9 +142,9 @@ module place::place_tests {
             place::set_color(&mut place_instance, &clock_instance, 1, 255, 0, 0, ts::ctx(scenario));
 
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
+        clock::destroy_for_testing(clock_instance);
         ts::end(scenario_val);
     }
 
@@ -162,13 +153,13 @@ module place::place_tests {
     fun err_frozen_test() {
         let scenario_val = ts::begin(ADMIN);
         let scenario = &mut scenario_val;
+        let clock_instance = clock::create_for_testing(ts::ctx(scenario));
         init_place(2, scenario);
 
         // Modify a pixel's color
         ts::next_tx(scenario, ADMIN);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
             // Set 1st pixel to black
             place::set_color(&mut place_instance, &clock_instance, 0, 0, 0, 0, ts::ctx(scenario));
             clock::increment_for_testing(&mut clock_instance, 60001);
@@ -179,10 +170,10 @@ module place::place_tests {
             place::set_color(&mut place_instance, &clock_instance, 0, 255, 255, 255, ts::ctx(scenario));
 
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
             ts::return_to_sender(scenario, admin_capability);
         };
 
+        clock::destroy_for_testing(clock_instance);
         ts::end(scenario_val);
     }
 
@@ -191,20 +182,19 @@ module place::place_tests {
     fun err_invalid_size_test() {
         let scenario_val = ts::begin(ADMIN);
         let scenario = &mut scenario_val;
+        let clock_instance = clock::create_for_testing(ts::ctx(scenario));
         init_place(2, scenario);
 
         // Modify a pixel's color
         ts::next_tx(scenario, ADMIN);
         {
             let place_instance = ts::take_shared<Place>(scenario);
-            let clock_instance = ts::take_shared<Clock>(scenario);
             // Attempt to access a 3rd element which doesn't exist
             place::set_color(&mut place_instance, &clock_instance, 2, 0, 0, 0, ts::ctx(scenario));
-
             ts::return_shared(place_instance);
-            ts::return_shared(clock_instance);
         };
 
+        clock::destroy_for_testing(clock_instance);
         ts::end(scenario_val);
     }
 }
